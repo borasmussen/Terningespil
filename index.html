@@ -32,22 +32,33 @@ button.p{background:var(--accent);border-color:var(--accent);color:#fff}
 .show .b.y{display:flex}
 .win .d{background:#dff3d9}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .win .d{background:#2f4a2c}}
+body{position:relative}
+.langs{display:flex;gap:8px;margin:2px 0 8px}
+.langs button{padding:3px;border:2px solid transparent;border-radius:6px;background:none;line-height:0;opacity:.6}
+.langs button.act{border-color:var(--accent);opacity:1}
+.langs svg{width:36px;height:24px;display:block;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
 #msg{min-height:1.6em;margin-top:12px;font-weight:bold;color:var(--accent);font-family:system-ui,sans-serif}
 </style>
 </head>
 <body>
-<h1>Terningespillet</h1>
+<div class="langs">
+<button data-l="da" title="Dansk" aria-label="Dansk"><svg viewBox="0 0 37 28"><rect width="37" height="28" fill="#C8102E"/><rect x="12" width="4" height="28" fill="#fff"/><rect y="12" width="37" height="4" fill="#fff"/></svg></button>
+<button data-l="es" title="Español" aria-label="Español"><svg viewBox="0 0 3 2" preserveAspectRatio="none"><rect width="3" height="2" fill="#AA151B"/><rect y=".5" width="3" height="1" fill="#F1BF00"/></svg></button>
+<button data-l="de" title="Deutsch" aria-label="Deutsch"><svg viewBox="0 0 5 3" preserveAspectRatio="none"><rect width="5" height="3" fill="#FFCE00"/><rect width="5" height="2" fill="#D00"/><rect width="5" height="1" fill="#000"/></svg></button>
+<button data-l="en" title="English" aria-label="English"><svg viewBox="0 0 60 30"><clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath><clipPath id="c"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><g clip-path="url(#s)"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#c)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></g></svg></button>
+</div>
+<h1 data-i="title"></h1>
 <div style="margin:0 0 10px;color:var(--muted);font-size:.8rem;font-family:system-ui,sans-serif">&copy; Bo Rasmussen, 2026</div>
-<p class="sub">Tryk på en terning: den går <b>+1</b>, naboerne (op, ned, venstre, højre) går <b>−1</b>. Efter 6 kommer 1, og efter 1 kommer 6. Få alle terningerne til at vise det samme tal.</p>
+<p class="sub" data-i="sub"></p>
 <div class="bar">
-  <span>Træk: <b id="n">0</b></span>
-  <label>Størrelse <select id="size"><option value="3">3×3</option><option value="4" selected>4×4</option><option value="5">5×5</option><option value="6">6×6</option><option value="7">7×7</option><option value="8">8×8</option><option value="9">9×9</option><option value="10">10×10</option></select></label>
-  <label>Sværhed <select id="lvl"><option value="40">Let</option><option value="150" selected>Middel</option><option value="500">Svær</option></select></label>
-  <button class="p" id="new">Nyt spil</button>
-  <button id="reset">Start forfra</button>
-  <button id="hint">Vis løsning</button>
-  <button id="auto">Løs automatisk</button>
-  <span>Mål: <b id="tv" style="font-size:1.7rem;line-height:1;vertical-align:-3px"></b></span>
+  <span><span data-i="moves"></span>: <b id="n">0</b></span>
+  <label><span data-i="size"></span> <select id="size"><option value="3">3×3</option><option value="4" selected>4×4</option><option value="5">5×5</option><option value="6">6×6</option><option value="7">7×7</option><option value="8">8×8</option><option value="9">9×9</option><option value="10">10×10</option></select></label>
+  <label><span data-i="level"></span> <select id="lvl"><option value="40" data-i="easy"></option><option value="150" selected data-i="medium"></option><option value="500" data-i="hard"></option></select></label>
+  <button class="p" id="new" data-i="new"></button>
+  <button id="reset" data-i="reset"></button>
+  <button id="hint"></button>
+  <button id="auto" data-i="auto"></button>
+  <span><span data-i="goal"></span>: <b id="tv" style="font-size:1.7rem;line-height:1;vertical-align:-3px"></b></span>
 </div>
 <div id="board"></div>
 <div id="msg"></div>
@@ -55,16 +66,29 @@ button.p{background:var(--accent);border-color:var(--accent);color:#fff}
 let N=10;const P=[[],[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]];
 let g=[],start=[],moves=0,done=false,V=1,S=[],p=Array(N*N).fill(0),timer=null;
 const el=document.getElementById('board');let cells=[];
-function build(){el.innerHTML='';cells=[];el.style.gridTemplateColumns='repeat('+N+',1fr)';for(let i=0;i<N*N;i++){const b=document.createElement('button');b.className='d';b.setAttribute('aria-label','Terning '+(i+1));
+function build(){el.innerHTML='';cells=[];el.style.gridTemplateColumns='repeat('+N+',1fr)';for(let i=0;i<N*N;i++){const b=document.createElement('button');b.className='d';b.setAttribute('aria-label',T[L].die+' '+(i+1));
  for(let k=0;k<9;k++)b.appendChild(document.createElement('i'));
  const bd=document.createElement('span');bd.className='b';b.appendChild(bd);b.onclick=()=>play(i);el.appendChild(b);cells.push(b)}}
+const T={
+da:{title:'Terningespillet',sub:'Tryk på en terning: den går <b>+1</b>, naboerne (op, ned, venstre, højre) går <b>−1</b>. Efter 6 kommer 1, og efter 1 kommer 6. Få alle terningerne til at vise det samme tal.',moves:'Træk',size:'Størrelse',level:'Sværhed',easy:'Let',medium:'Middel',hard:'Svær',new:'Nyt spil',reset:'Start forfra',show:'Vis løsning',hide:'Skjul løsning',auto:'Løs automatisk',goal:'Mål',die:'Terning',win:(m,v)=>'Løst på '+m+' træk! Alle viser '+v+'.'},
+en:{title:'The Dice Game',sub:'Tap a die: it goes <b>+1</b>, its neighbours (up, down, left, right) go <b>−1</b>. After 6 comes 1, and before 1 comes 6. Make all the dice show the same number.',moves:'Moves',size:'Size',level:'Difficulty',easy:'Easy',medium:'Medium',hard:'Hard',new:'New game',reset:'Start over',show:'Show solution',hide:'Hide solution',auto:'Solve automatically',goal:'Goal',die:'Die',win:(m,v)=>'Solved in '+m+' moves! All show '+v+'.'},
+de:{title:'Das Würfelspiel',sub:'Tippe auf einen Würfel: Er wird um <b>+1</b> erhöht, seine Nachbarn (oben, unten, links, rechts) um <b>−1</b>. Nach 6 kommt 1, und vor 1 kommt 6. Bringe alle Würfel auf dieselbe Zahl.',moves:'Züge',size:'Größe',level:'Schwierigkeit',easy:'Leicht',medium:'Mittel',hard:'Schwer',new:'Neues Spiel',reset:'Neu starten',show:'Lösung zeigen',hide:'Lösung verbergen',auto:'Automatisch lösen',goal:'Ziel',die:'Würfel',win:(m,v)=>'Gelöst in '+m+' Zügen! Alle zeigen '+v+'.'},
+es:{title:'El juego de los dados',sub:'Toca un dado: sube <b>+1</b> y sus vecinos (arriba, abajo, izquierda, derecha) bajan <b>−1</b>. Después del 6 viene el 1, y antes del 1 viene el 6. Consigue que todos los dados muestren el mismo número.',moves:'Movimientos',size:'Tamaño',level:'Dificultad',easy:'Fácil',medium:'Medio',hard:'Difícil',new:'Nuevo juego',reset:'Reiniciar',show:'Mostrar solución',hide:'Ocultar solución',auto:'Resolver automáticamente',goal:'Objetivo',die:'Dado',win:(m,v)=>'¡Resuelto en '+m+' movimientos! Todos muestran '+v+'.'}
+};
+let L=(()=>{let s=null;try{s=localStorage.getItem('lang')}catch(e){}if(!T[s]){const n=(navigator.language||'en').slice(0,2);s=T[n]?n:'en'}return s})();
+function hintLabel(){document.getElementById('hint').textContent=el.classList.contains('show')?T[L].hide:T[L].show}
+function applyLang(){const t=T[L];document.documentElement.lang=L;document.title=t.title;
+ document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=t[e.dataset.i]);
+ document.querySelectorAll('.langs button').forEach(b=>b.classList.toggle('act',b.dataset.l===L));
+ hintLabel();cells.forEach((b,i)=>b.setAttribute('aria-label',t.die+' '+(i+1)));render()}
+document.querySelectorAll('.langs button').forEach(b=>b.onclick=()=>{L=b.dataset.l;try{localStorage.setItem('lang',L)}catch(e){}applyLang()});
 const wrap=v=>((v-1)%6+6)%6+1;
 function nb(i){const r=Math.floor(i/N),c=i%N,a=[];if(r>0)a.push(i-N);if(r<N-1)a.push(i+N);if(c>0)a.push(i-1);if(c<N-1)a.push(i+1);return a}
 function press(arr,i,s){arr[i]=wrap(arr[i]+s);nb(i).forEach(j=>arr[j]=wrap(arr[j]-s))}
 function same(a){return a.every(v=>v===a[0])}
 function render(){cells.forEach((b,i)=>{const on=P[g[i]];[...b.children].forEach((p,k)=>p.classList.toggle('on',on.includes(k)))});
  cells.forEach((b,i)=>{const q=((S[i]-p[i])%6+6)%6,bd=b.lastChild;bd.textContent=q;bd.classList.toggle('y',q>0)});
- document.getElementById('n').textContent=moves;document.getElementById('tv').textContent='⚀⚁⚂⚃⚄⚅'[V-1]+' '+V;el.classList.toggle('win',done)}
+ document.getElementById('n').textContent=moves;document.getElementById('tv').textContent='⚀⚁⚂⚃⚄⚅'[V-1]+' '+V;el.classList.toggle('win',done);document.getElementById('msg').textContent=done?T[L].win(moves,g[0]):''}
 function newGame(){
  N=+document.getElementById('size').value;build();
  const steps=+document.getElementById('lvl').value;
@@ -75,15 +99,15 @@ function newGame(){
  start=g.slice();
  p=Array(N*N).fill(0);clearInterval(timer);start=g.slice();moves=0;done=false;document.getElementById('msg').textContent='';render()}
 function play(i){if(done)return;press(g,i,1);p[i]=(p[i]+1)%6;moves++;
- if(same(g)){done=true;document.getElementById('msg').textContent='Løst på '+moves+' træk! Alle viser '+g[0]+'.'}
+ if(same(g))done=true;
  render()}
 document.getElementById('new').onclick=newGame;document.getElementById('size').onchange=newGame;
 document.getElementById('reset').onclick=()=>{clearInterval(timer);p=Array(N*N).fill(0);g=start.slice();moves=0;done=false;document.getElementById('msg').textContent='';render()};
-document.getElementById('hint').onclick=e=>{el.classList.toggle('show');e.target.textContent=el.classList.contains('show')?'Skjul løsning':'Vis løsning'};
-document.getElementById('auto').onclick=()=>{el.classList.add('show');clearInterval(timer);
+document.getElementById('hint').onclick=()=>{el.classList.toggle('show');hintLabel()};
+document.getElementById('auto').onclick=()=>{el.classList.add('show');hintLabel();clearInterval(timer);
  timer=setInterval(()=>{if(done){clearInterval(timer);return}
   const i=cells.findIndex((_,k)=>((S[k]-p[k])%6+6)%6>0);if(i<0){clearInterval(timer);return}play(i)},60)};
-newGame();
+newGame();applyLang();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
